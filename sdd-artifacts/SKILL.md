@@ -45,7 +45,7 @@ En una historia posterior, reutilizar Constitución y AGENTS y revisar las histo
 
 **Testing es un requisito de planificación**: usar [control de estrategia de pruebas](./resources/testing-policy.md). PLAN debe proponer tests unitarios y/o funcionales **automatizados, persistidos y repetibles** (o excepción aprobada); TASKS incluye preparación del runner y los casos; IMPLEMENT los ejecuta, informa resultados y conserva el código de test. Probar una vez en el navegador **no es lo mismo** que disponer de tests automatizados repetibles.
 
-**IMPLEMENT y VALIDATE**: al implementar cada tarea, preferir pruebas automatizadas antes de o junto al cambio cuando sea viable, ejecutar la suite real y **detenerse** tras informar y solicitar autorización para la siguiente tarea. VALIDATE revisa **RF/criterio por RF/criterio**, test concreto, resultado verificable y veredicto final; sin suponer aprobación por el mero informe del agente.
+**IMPLEMENT y VALIDATE**: al implementar cada tarea, preferir pruebas automatizadas antes de o junto al cambio cuando sea viable, ejecutar la suite real y verificar su Quality Gate. Por defecto, **detenerse** después de cada tarea para informar y solicitar autorización para la siguiente. **Excepción con autorización explícita**: `task-implementer` puede procesar un rango continuo de tareas consecutivas, de la misma HU, prevalidado por orden y dependencias; en ese caso valida cada tarea antes de continuar sin pedir aprobación intermedia, se detiene ante cualquier fallo y al terminar presenta un informe consolidado y solicita autorización para la siguiente tarea pendiente. No ampliar el rango ni omitir pruebas. VALIDATE revisa **RF/criterio por RF/criterio**, test concreto, resultado verificable y veredicto final; sin suponer aprobación por el mero informe del agente.
 
 **README es un entregable ejecutable**: [control de instrucciones de ejecución](./resources/readme-checklist.md). Incluir paso a paso para abrir la app, qué URL/archivo observar, instrucciones Mac/Windows cuando varíen, cómo usarla y cómo probarla. Validar en el sistema disponible; indicar límites de verificación.
 
@@ -53,7 +53,7 @@ En una historia posterior, reutilizar Constitución y AGENTS y revisar las histo
 
 **Cambios posteriores a SPEC**: consultar [control de cambios](./resources/change-control.md). Proponer diff y estimar impacto **antes** de modificar un artefacto aprobado; reaprobar y ajustar trazabilidad, nunca pasar directo al código.
 
-**Human-in-the-loop**: aprobación por artefacto, tarea y operación Git; no avanzar automáticamente. Si PLAN descubre regla funcional nueva, detener, consultar y volver a aprobar SPEC.
+**Human-in-the-loop**: aprobación por artefacto; autorización expresa de una tarea o de un rango **contiguo, ordenado y verificado** de tareas; aprobación independiente para cada operación Git. No continuar fuera del rango autorizado. Si PLAN descubre regla funcional nueva, detener, consultar y volver a aprobar SPEC.
 
 ## Plantillas incluidas
 - [HU inicial](./templates/HU.md)

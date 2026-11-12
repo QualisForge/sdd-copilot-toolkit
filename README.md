@@ -2,9 +2,9 @@
 
 **Toolkit reutilizable de agentes, skill, plantillas y controles para trabajar con desarrollo dirigido por especificaciones (*Spec-Driven Development*, SDD) en VS Code.**
 
-El objetivo es pasar de solicitudes aisladas a un proceso documentado y verificable: comprender el requisito, aclararlo, planificar la solución, implementar una tarea a la vez y comprobar los resultados. Los agentes asisten al usuario, pero **no sustituyen su aprobación** en los *Quality Gates*.
+El objetivo es pasar de solicitudes aisladas a un proceso documentado y verificable: comprender el requisito, aclararlo, planificar la solución, implementar tareas autorizadas de forma individual o en lotes secuenciales y comprobar los resultados. Los agentes asisten al usuario, pero **no sustituyen su autorización** ni los *Quality Gates*.
 
-[Ir a la instalación](#instalación-en-vs-code-macos-y-windows) · [Ir al flujo con historias de usuario](#flujo-de-trabajo-con-hu) · [Ver instrumentos SDD](#instrumentos-del-proyecto)
+[Ir a la instalación](#instalación-en-vs-code-macos-y-windows) · [Ir al flujo con historias de usuario](#flujo-de-trabajo-con-hu) · [Ejecutar tareas autorizadas](#ejecución-de-tareas-con-task-implementer) · [Ver instrumentos SDD](#instrumentos-del-proyecto)
 
 ## Qué es SDD y cómo se aplica
 
@@ -16,7 +16,7 @@ SDD es un enfoque de trabajo en el que la especificación de lo que debe hacer e
 | **2. CLARIFY** | Revisar ambigüedades, límites, errores y contradicciones. | Aclaraciones registradas en `spec.md` y aprobación de SPEC. |
 | **3. PLAN** | Proponer o reutilizar tecnologías, diseñar componentes y definir pruebas. | `plan.md` aprobado, incluida la decisión técnica. |
 | **4. TASKS** | Organizar el trabajo por tareas verificables y dependencias. | `tasks.md` aprobado. |
-| **5. IMPLEMENT** | Desarrollar solamente una tarea autorizada, con pruebas reproducibles. | Código, pruebas, documentación y evidencia por tarea. |
+| **5. IMPLEMENT** | Desarrollar una tarea autorizada por defecto o un rango consecutivo autorizado expresamente; verificar cada Quality Gate. | Código, pruebas, documentación y evidencia por tarea; informe consolidado si hay lote. |
 | **6. VALIDATE** | Contrastar requisitos y criterios de aceptación con las pruebas ejecutadas. | Informe de cumplimiento y pendientes. |
 
 Antes de la primera historia, un proyecto nuevo pasa por dos **pasos de preparación general**: `docs/constitution.md` (principios) y `AGENTS.md` (instrucciones del repositorio). Cada uno requiere aprobación independiente. Después de VALIDATE puede realizarse el cierre operativo (*CLOSE*) de la historia, con operaciones Git siempre autorizadas por el usuario.
@@ -56,7 +56,7 @@ sdd-copilot-toolkit/
 | Elemento | Función |
 |---|---|
 | [`agents/project-initializer.agent.md`](agents/project-initializer.agent.md) | Examina las historias y el contexto; conduce Constitución, AGENTS, SPECIFY, CLARIFY, PLAN y TASKS. **No implementa código.** |
-| [`agents/task-implementer.agent.md`](agents/task-implementer.agent.md) | Implementa una tarea aprobada cada vez; crea y ejecuta pruebas, valida y solicita autorización para acciones Git. |
+| [`agents/task-implementer.agent.md`](agents/task-implementer.agent.md) | Implementa una tarea autorizada por defecto o un lote consecutivo autorizado expresamente; verifica cada tarea, consolida resultados y solicita autorización independiente para Git. |
 | [`sdd-artifacts/SKILL.md`](sdd-artifacts/SKILL.md) | Define el procedimiento compartido y enlaza las plantillas y controles que correspondan a cada fase. |
 | [`sdd-artifacts/templates/`](sdd-artifacts/templates/) | Modelos para historia de usuario, Constitución, AGENTS, SPEC, PLAN, TASKS y README **del proyecto que se construye**. |
 | [`sdd-artifacts/resources/`](sdd-artifacts/resources/) | Guías y listas de verificación para entrevista, CLARIFY, aprobaciones, planificación, pruebas, tareas, README y cambios. |
@@ -147,7 +147,7 @@ Una vez revisada y aprobada la Constitución, responde, por ejemplo, `Aprobada l
 | **CLARIFY** | Revisar hallazgos de QA, resolver dudas una por una y aprobar SPEC. | En `spec.md` queda constancia de CLARIFY, y luego estado **Aprobada** registrado y verificado. |
 | **PLAN** | Evaluar la propuesta técnica y las pruebas; aprobar el documento. | Stack aprobado, componentes, trazabilidad RF/prueba, preparación del entorno y README previstos. |
 | **TASKS** | Revisar tareas, dependencias, criterios «Hecho cuando» y grupos Git; aprobar. | `tasks.md` aprobado, sin código implementado por el inicializador. |
-| **IMPLEMENT** | Cambiar a `task-implementer` y autorizar **una tarea identificada** cada vez. | Código y tests automatizados persistentes, resultado real, pausa para autorizar la siguiente tarea. |
+| **IMPLEMENT** | Cambiar a `task-implementer`; autorizar **una tarea** (por defecto) o **un rango consecutivo explícito**. | Tests automatizados persistentes y Quality Gate por tarea; informe individual o consolidado, con pausa al finalizar el alcance autorizado. |
 | **VALIDATE** | Pedir revisión final requisito por requisito y decidir cierre. | Matriz de criterios, pruebas ejecutadas, regresión y puesta en marcha comprobable. |
 
 **Ejemplos de solicitudes cortas:**
@@ -161,10 +161,36 @@ Implementa únicamente T001 de la HU-001 aprobada. Ejecuta sus pruebas y detente
 ```
 
 ```text
+Autorizo implementar T001, T002 y T003 de la HU-001, en ese orden.
+Verifica cada tarea antes de avanzar, detente si falla alguna y presenta un informe consolidado al terminar.
+```
+
+```text
 Valida la HU-001 requisito por requisito y presenta evidencias y pendientes.
 ```
 
-Los mensajes anteriores no sustituyen una aprobación explícita. El usuario debe revisar los cambios y autorizar por separado cualquier commit, push, pull request, merge o tag.
+Los mensajes anteriores no sustituyen las aprobaciones de SPEC, PLAN y TASKS. El usuario debe autorizar explícitamente las tareas que desea implementar y, por separado, cualquier commit, push, pull request, merge o tag.
+
+#### Ejecución de tareas con `task-implementer`
+
+**Modo individual (predeterminado).** Autoriza un ID concreto de `tasks.md`, por ejemplo `T001`. El agente comprueba requisitos previos y dependencias, implementa la tarea, ejecuta las pruebas previstas, verifica su *Quality Gate*, informa resultados y **se detiene** para solicitar autorización de la siguiente tarea pendiente, si existe.
+
+**Modo por lote secuencial (opcional).** Puedes autorizar explícitamente varios ID **consecutivos y ordenados** de la **misma historia de usuario**. El agente valida **todo el rango antes de editar archivos**: los ID deben existir en el `tasks.md` aprobado, ser contiguos según el orden real del documento, comenzar por la siguiente tarea pendiente habilitada y tener dependencias satisfechas o resolubles mediante las tareas anteriores del mismo lote. No basta con que los números parezcan consecutivos si su orden en `tasks.md` es distinto.
+
+| Solicitud de implementación | Comportamiento esperado |
+|---|---|
+| `Implementa T001` | Ejecutar solo `T001`, informar y solicitar autorización para la siguiente tarea. |
+| `Autorizo T001, T002 y T003` | Ejecutar en ese orden, **una tarea a la vez**, comprobando cada Quality Gate antes de continuar. |
+| `Autorizo desde T002 hasta T004` | Permitido **solo si** `T002` es la siguiente pendiente y las tareas anteriores y dependencias aplicables están verificadas. |
+| `Autorizo T001 y T005` | **Rechazar el lote completo:** se omiten tareas intermedias. |
+| `Autorizo T003 y T002` | **Rechazar:** el orden no es válido. |
+| `Ejecuta todas las tareas pendientes` | Enumerar el rango preciso y **pedir confirmación explícita** antes de comenzar. |
+
+**Durante un lote:** no se solicita una aprobación intermedia entre tareas ya autorizadas, **pero cada una mantiene su propio Quality Gate**, sus pruebas automatizadas y su evidencia. Si una tarea falla, el agente puede corregirla solo dentro del alcance aprobado; si no supera el control o surge una dependencia pendiente o un cambio de negocio, **detiene el lote**. Las tareas restantes no se ejecutan y, para reanudar, es necesaria **una nueva autorización explícita**.
+
+**Al terminar el lote:** el agente presenta un **informe consolidado obligatorio** que identifica el rango autorizado; el estado de cada tarea (completada, fallida o no ejecutada); archivos afectados; pruebas y comandos realmente ejecutados (PASARON / FALLARON / NO EJECUTADAS); regresión, evidencias, Quality Gates y pendientes. Después **se detiene y solicita autorización** para la siguiente tarea pendiente, si existe. Si no quedan tareas, informa que corresponde evaluar VALIDATE/CLOSE, sin ejecutarlos automáticamente fuera del alcance aprobado.
+
+**Operaciones Git:** autorizar una tarea o un lote **no autoriza** `commit`, `push`, pull request, `merge`, creación de tags ni eliminación de ramas. Estas acciones requieren permisos separados, incluso cuando se complete un grupo de tareas definido en `tasks.md`.
 
 ### 4. Incorporar `HU-002` (historia de usuario)
 
@@ -218,12 +244,12 @@ Los nombres `HU-001` y `HU-002` significan **historia de usuario**. Cada histori
 
 ## Controles de calidad y límites
 
-- **No hay avance por silencio.** Toda aprobación es específica, queda registrada en el archivo correspondiente y se verifica antes de cambiar de fase.
+- **No hay avance por silencio.** Toda aprobación de artefactos es específica, queda registrada y se verifica antes de cambiar de fase. En IMPLEMENT se exige autorización expresa para cada tarea individual o para el rango consecutivo completo; nunca se amplía por inferencia.
 - **CLARIFY es una etapa explícita.** Las preguntas iniciales de SPECIFY no sustituyen su auditoría posterior.
 - **La tecnología se decide en PLAN.** Si no está fijada, el agente propone alternativas proporcionadas y espera aprobación; no impone un stack al comenzar.
-- **Las pruebas automatizadas deben poder repetirse.** PLAN las define, TASKS las organiza y `task-implementer` las implementa y ejecuta. Solo las comprobaciones manuales no constituyen una suite automatizada reutilizable, salvo excepción documentada y aprobada.
+- **Las pruebas automatizadas deben poder repetirse.** PLAN las define, TASKS las organiza y `task-implementer` las implementa y ejecuta. Cada tarea, incluso dentro de un lote, debe superar su Quality Gate antes de avanzar. Solo las comprobaciones manuales no constituyen una suite automatizada reutilizable, salvo excepción documentada y aprobada.
 - **La guía de la aplicación debe explicar cómo verla funcionar.** El README del proyecto implementado debe reflejar comandos o pasos efectivamente validados.
-- **Los agentes no sustituyen la revisión humana.** Revisa el contenido, las evidencias y las operaciones Git antes de autorizarlas.
+- **Los agentes no sustituyen la revisión humana.** Revisa el contenido, las evidencias y las operaciones Git antes de autorizarlas; las operaciones Git nunca quedan aprobadas por autorizar un lote.
 
 ## Solución de problemas
 
@@ -236,6 +262,8 @@ Los nombres `HU-001` y `HU-002` significan **historia de usuario**. Cada histori
 | Crea `AGENTS.md` antes de aprobar Constitución | Detenerse; comprobar `docs/constitution.md` pendiente, corregir el orden y repetir la prueba en un chat nuevo. |
 | Dice «aprobado» pero no cambia el archivo | Revisar los metadatos guardados; pedir verificación del estado y **no avanzar** hasta que el archivo refleje la aprobación. |
 | Omite CLARIFY o no planifica tests | No aprobar SPEC/PLAN: solicitar corregir el documento correspondiente con la skill. |
+| Rechaza un lote de tareas | Revisar que los ID sean **continuos en el orden de `tasks.md`**, que el primero sea el siguiente pendiente habilitado y que todas las dependencias estén cubiertas. |
+| Avanza fuera de un lote autorizado o se detiene entre tareas válidas | Revisar que estén actualizadas **ambas personalizaciones**: `task-implementer.agent.md` y `sdd-artifacts/SKILL.md`; iniciar un chat nuevo y comprobar las autorizaciones y Quality Gates. |
 | La aplicación no inicia tras IMPLEMENT | Seguir el README generado para la aplicación y revisar el comando y entorno **aprobados en PLAN**, sin inventar otros. |
 
 ## Documentación de referencia
